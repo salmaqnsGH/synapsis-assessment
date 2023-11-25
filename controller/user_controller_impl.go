@@ -52,3 +52,22 @@ func (controller *UserControllerImpl) Login(writer http.ResponseWriter, request 
 
 	helper.WriteToResponseBody(writer, webResponse)
 }
+
+func (controller *UserControllerImpl) Update(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
+	userUpdateRequest := web.UserUpdateRequest{}
+	helper.ReadFromRequestBody(request, &userUpdateRequest)
+
+	userID := helper.GetUserIDFromToken(writer, request)
+
+	userUpdateRequest.ID = int(userID.(float64))
+
+	userResponse := controller.UserService.Update(request.Context(), userUpdateRequest)
+
+	webResponse := web.WebResponse{
+		Code:   200,
+		Status: "OK",
+		Data:   userResponse,
+	}
+
+	helper.WriteToResponseBody(writer, webResponse)
+}

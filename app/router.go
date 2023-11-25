@@ -24,6 +24,7 @@ func NewRouter(categoryController controller.CategoryController, userController 
 
 	router.POST("/api/v1/users/register", userController.Register)
 	router.POST("/api/v1/users/login", userController.Login)
+	router.POST("/api/v1/users/update", userController.Update)
 
 	router.PanicHandler = exception.ErrorHandler
 

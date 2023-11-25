@@ -2,7 +2,11 @@ CREATE TABLE users (
     id SERIAL PRIMARY KEY,
     name VARCHAR(255),
     username VARCHAR(255),
-    password VARCHAR(255)
+    password VARCHAR(255),
+    balance bigint,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMPTZ
 );
 
 CREATE TABLE categories (

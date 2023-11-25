@@ -85,3 +85,33 @@ func (service *UserServiceImpl) Login(ctx context.Context, req web.UserLoginRequ
 		Token:    token,
 	}, nil
 }
+
+func (service *UserServiceImpl) Update(ctx context.Context, req web.UserUpdateRequest) web.UserResponse {
+	err := service.Validate.Struct(req)
+	helper.PanicIfError(err)
+
+	tx, err := service.DB.Begin()
+	helper.PanicIfError(err)
+
+	defer helper.CommitOrRollback(tx)
+
+	passwordHash, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.MinCost)
+	helper.PanicIfError(err)
+
+	reqUser := domain.User{
+		ID:       req.ID,
+		Name:     req.Name,
+		Username: req.Username,
+		Password: string(passwordHash),
+		Balance:  req.Balance,
+	}
+
+	user := service.UserRepository.Update(ctx, tx, reqUser)
+
+	return web.UserResponse{
+		ID:       user.ID,
+		Name:     user.Name,
+		Username: user.Username,
+		Balance:  user.Balance,
+	}
+}
