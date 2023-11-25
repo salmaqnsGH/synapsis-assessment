@@ -8,6 +8,7 @@ import (
 	"salmaqnsGH/sysnapsis-assessment/app"
 	"salmaqnsGH/sysnapsis-assessment/controller"
 	"salmaqnsGH/sysnapsis-assessment/helper"
+	"salmaqnsGH/sysnapsis-assessment/middleware"
 	"salmaqnsGH/sysnapsis-assessment/repository"
 	"salmaqnsGH/sysnapsis-assessment/service"
 
@@ -20,6 +21,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	host := os.Getenv("HOST")
 	port := os.Getenv("PORT")
 
@@ -31,13 +33,17 @@ func main() {
 	categoryService := service.NewCategoryService(categoryRepository, db, validate)
 	categoryController := controller.NewCategoryController(categoryService)
 
-	router := app.NewRouter(categoryController)
+	userRepository := repository.NewUserRepository()
+	userService := service.NewUserService(userRepository, db, validate)
+	userController := controller.NewUserController(userService)
+
+	router := app.NewRouter(categoryController, userController)
 
 	address := fmt.Sprintf("%s:%s", host, port)
 
 	server := http.Server{
 		Addr:    address,
-		Handler: router,
+		Handler: middleware.NewAuthMiddleware(router),
 	}
 
 	err = server.ListenAndServe()
