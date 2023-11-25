@@ -5,4 +5,6 @@ type ProductCreateRequest struct {
 	Description string `json:"description"`
 	CategoryID  int    `validate:"required" json:"category_id"`
 	OwnerID     int    `validate:"required" json:"owner_id"`
+	Quantity    int    `validate:"required" json:"quantity"`
+	Price       int    `validate:"required" json:"price"`
 }

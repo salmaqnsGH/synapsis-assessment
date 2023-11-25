@@ -8,6 +8,8 @@ type Product struct {
 	Description string
 	CategoryID  int
 	OwnerID     int
+	Quantity    int
+	Price       int
 	CreatedAt   time.Time
 	UpdatedAt   time.Time
 }

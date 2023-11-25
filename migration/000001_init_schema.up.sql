@@ -20,9 +20,11 @@ CREATE TABLE products (
     description VARCHAR(255),
 	category_id INT REFERENCES categories(id),
 	owner_id INT REFERENCES users(id),
-    createdAt TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updatedAt TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deletedAt TIMESTAMPTZ
+    quantity INT,
+    price BIGINT,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted_at TIMESTAMPTZ
 );
 
 

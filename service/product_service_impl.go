@@ -40,6 +40,8 @@ func (service *ProductServiceImpl) Create(ctx context.Context, req web.ProductCr
 		Description: req.Description,
 		CategoryID:  req.CategoryID,
 		OwnerID:     req.OwnerID,
+		Quantity:    req.Quantity,
+		Price:       req.Price,
 	}
 
 	product = service.ProductRepository.Save(ctx, tx, product)
@@ -50,6 +52,8 @@ func (service *ProductServiceImpl) Create(ctx context.Context, req web.ProductCr
 		Description: product.Description,
 		CategoryID:  product.CategoryID,
 		OwnerID:     product.OwnerID,
+		Quantity:    product.Quantity,
+		Price:       product.Price,
 	}
 }
 
@@ -70,6 +74,8 @@ func (service *ProductServiceImpl) Update(ctx context.Context, req web.ProductUp
 	product.Name = req.Name
 	product.Description = req.Description
 	product.CategoryID = req.CategoryID
+	product.Quantity = req.Quantity
+	product.Price = req.Price
 
 	product = service.ProductRepository.Update(ctx, tx, product)
 
@@ -79,6 +85,8 @@ func (service *ProductServiceImpl) Update(ctx context.Context, req web.ProductUp
 		Description: product.Description,
 		CategoryID:  product.CategoryID,
 		OwnerID:     product.OwnerID,
+		Quantity:    product.Quantity,
+		Price:       product.Price,
 	}
 }
 
@@ -113,6 +121,8 @@ func (service *ProductServiceImpl) FindByID(ctx context.Context, productID int) 
 		Description: product.Description,
 		CategoryID:  product.CategoryID,
 		OwnerID:     product.OwnerID,
+		Quantity:    product.Quantity,
+		Price:       product.Price,
 	}
 }
 
@@ -132,6 +142,8 @@ func (service *ProductServiceImpl) FindAll(ctx context.Context) []web.ProductRes
 			Description: product.Description,
 			CategoryID:  product.CategoryID,
 			OwnerID:     product.OwnerID,
+			Quantity:    product.Quantity,
+			Price:       product.Price,
 		}
 		productResponses = append(productResponses, productResponse)
 	}

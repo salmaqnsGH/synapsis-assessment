@@ -10,4 +10,6 @@ type ProductResponse struct {
 	OwnerID     int       `json:"owner_id"`
 	CreatedAt   time.Time `json:"created_at"`
 	UpdatedAt   time.Time `json:"updated_at"`
+	Quantity    int       `validate:"required" json:"quantity"`
+	Price       int       `validate:"required" json:"price"`
 }
