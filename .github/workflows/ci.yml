@@ -16,13 +16,9 @@ jobs:
       postgres:
         image: postgres:14
         env:
-          DB_USER: root
-          DB_PASSWORD: secret
-          DB_NAME: shopping
-          TEST_DB_HOST: localhost
-          TEST_DB_USER: root
-          TEST_DB_PASSWORD: secret
-          TEST_DB_NAME: shopping_test
+          POSTGRES_USER: root
+          POSTGRES_PASSWORD: secret
+          POSTGRES_DB: shopping
         ports:
           - 5455:5432
         options: >-
