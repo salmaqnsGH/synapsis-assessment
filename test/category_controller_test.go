@@ -66,7 +66,11 @@ func setupRouter(db *sql.DB) http.Handler {
 	categoryService := service.NewCategoryService(categoryRepository, db, validate)
 	categoryController := controller.NewCategoryController(categoryService)
 
-	router := app.NewRouter(categoryController)
+	userRepository := repository.NewUserRepository()
+	userService := service.NewUserService(userRepository, db, validate)
+	userController := controller.NewUserController(userService)
+
+	router := app.NewRouter(categoryController, userController)
 
 	return router
 }
