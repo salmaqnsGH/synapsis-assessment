@@ -43,3 +43,34 @@ func (controller *TransactionControllerImpl) AddToCart(writer http.ResponseWrite
 
 	helper.WriteToResponseBody(writer, webResponse)
 }
+
+func (controller *TransactionControllerImpl) FindAllProductInCart(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
+	userID := int(helper.GetUserIDFromToken(writer, request).(float64))
+
+	productResponses := controller.TransactionService.FindAllProductInCart(request.Context(), userID)
+
+	webResponse := web.WebResponse{
+		Code:   200,
+		Status: "OK",
+		Data:   productResponses,
+	}
+
+	helper.WriteToResponseBody(writer, webResponse)
+}
+
+func (controller *TransactionControllerImpl) Delete(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
+	userID := int(helper.GetUserIDFromToken(writer, request).(float64))
+
+	productIdParams := params.ByName("productId")
+	productID, err := strconv.Atoi(productIdParams)
+	helper.PanicIfError(err)
+
+	controller.TransactionService.Delete(request.Context(), productID, userID)
+
+	webResponse := web.WebResponse{
+		Code:   200,
+		Status: "OK",
+	}
+
+	helper.WriteToResponseBody(writer, webResponse)
+}

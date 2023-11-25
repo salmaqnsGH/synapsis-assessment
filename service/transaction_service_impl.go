@@ -84,3 +84,43 @@ func (service *TransactionServiceImpl) AddToCart(ctx context.Context, req web.Ca
 		OwnerID:    transaction.OwnerID,
 	}
 }
+
+func (service *TransactionServiceImpl) FindAllProductInCart(ctx context.Context, userID int) []web.TransactionResponse {
+	tx, err := service.DB.Begin()
+	helper.PanicIfError(err)
+
+	defer helper.CommitOrRollback(tx)
+
+	products := service.TransactionRepository.FindAllProductInCart(ctx, tx, userID)
+
+	var productResponses []web.TransactionResponse
+	for _, product := range products {
+		productResponse := web.TransactionResponse{
+			ID:         product.ID,
+			OwnerID:    product.OwnerID,
+			Quantity:   product.Quantity,
+			Price:      product.Price,
+			TotalPrice: product.TotalPrice,
+			IsInCart:   product.IsInCart,
+			UserID:     product.UserID,
+			ProductID:  product.ProductID,
+		}
+		productResponses = append(productResponses, productResponse)
+	}
+
+	return productResponses
+}
+
+func (service *TransactionServiceImpl) Delete(ctx context.Context, productID int, userID int) {
+	tx, err := service.DB.Begin()
+	helper.PanicIfError(err)
+
+	defer helper.CommitOrRollback(tx)
+
+	cart, err := service.TransactionRepository.IsProductInCart(ctx, tx, productID, userID)
+	if err != nil {
+		panic(exception.NewNotFoundError(err.Error()))
+	}
+
+	service.TransactionRepository.DeleteProductInCart(ctx, tx, cart.ID)
+}

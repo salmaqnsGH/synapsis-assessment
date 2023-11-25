@@ -56,7 +56,7 @@ func (repository *TransactionRepositoryImpl) IsProductInCart(ctx context.Context
 		owner_id,
 		is_in_cart
 	FROM transactions 
-	WHERE product_id = $1 AND user_id = $2 AND is_in_cart = true`
+	WHERE product_id = $1 AND user_id = $2 AND is_in_cart = true AND deleted_at IS NULL`
 	rows, err := tx.QueryContext(ctx, SQL, productID, userID)
 	helper.PanicIfError(err)
 
@@ -97,4 +97,42 @@ func (repository *TransactionRepositoryImpl) UpdateByID(ctx context.Context, tx 
 	helper.PanicIfError(err)
 
 	return transaction
+}
+
+func (repository *TransactionRepositoryImpl) FindAllProductInCart(ctx context.Context, tx *sql.Tx, userID int) []domain.Transaction {
+	SQL := `
+	SELECT 
+		id,
+		product_id,
+		quantity,
+		price,
+		total_price,
+		user_id,
+		product_id,
+		owner_id,
+		is_in_cart
+	FROM transactions 
+	WHERE user_id = $1 AND is_in_cart = true AND deleted_at IS NULL`
+	rows, err := tx.QueryContext(ctx, SQL, userID)
+	helper.PanicIfError(err)
+
+	defer rows.Close()
+
+	var transactions []domain.Transaction
+	for rows.Next() {
+		transaction := domain.Transaction{}
+		err := rows.Scan(&transaction.ID, &transaction.ProductID, &transaction.Quantity, &transaction.Price, &transaction.TotalPrice, &transaction.UserID, &transaction.ProductID, &transaction.OwnerID, &transaction.IsInCart)
+		helper.PanicIfError(err)
+
+		transactions = append(transactions, transaction)
+	}
+
+	return transactions
+}
+
+func (repository *TransactionRepositoryImpl) DeleteProductInCart(ctx context.Context, tx *sql.Tx, cartID int) {
+	SQL := "UPDATE transactions SET deleted_at=now() WHERE id = $1"
+
+	_, err := tx.ExecContext(ctx, SQL, cartID)
+	helper.PanicIfError(err)
 }
