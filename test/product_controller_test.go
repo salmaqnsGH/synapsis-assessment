@@ -17,28 +17,31 @@ import (
 	_ "github.com/lib/pq"
 )
 
-func createCategory(db *sql.DB) domain.Category {
+func createProduct(db *sql.DB, categoryID int) domain.Product {
 	tx, _ := db.Begin()
-	categoryRepository := repository.NewCategoryRepository()
-	category := categoryRepository.Save(context.Background(), tx, domain.Category{
-		Name:        "category name",
-		Description: "category description",
+	productRepository := repository.NewProductRepository()
+	product := productRepository.Save(context.Background(), tx, domain.Product{
+		Name:        "product name",
+		Description: "product description",
+		CategoryID:  categoryID,
 	})
 	tx.Commit()
 
-	return category
+	return product
 }
 
-func TestCreateCategorySuccess(t *testing.T) {
+func TestCreateProductSuccess(t *testing.T) {
 	db := setupTestDB()
 	truncateProduct(db)
 	truncateCategory(db)
+	category := createCategory(db)
 	router := setupRouter(db)
 
-	url := fmt.Sprintf("%s:%d/%s/categories",
+	url := fmt.Sprintf("%s:%d/%s/products",
 		baseUrl, port, apiVersion)
 
-	requestBody := strings.NewReader(`{"name":"new category name","description":"new category description"}`)
+	req := fmt.Sprintf(`{"name":"new product name","description":"new product description", "category_id":%d}`, category.ID)
+	requestBody := strings.NewReader(req)
 	request := httptest.NewRequest(http.MethodPost, url, requestBody)
 	request.Header.Add("Content-Type", "application/json")
 
@@ -55,19 +58,24 @@ func TestCreateCategorySuccess(t *testing.T) {
 
 	assert.Equal(t, 200, int(responseBody["code"].(float64)))
 	assert.Equal(t, "OK", responseBody["status"])
-	assert.Equal(t, "new category name", responseBody["data"].(map[string]interface{})["name"])
-	assert.Equal(t, "new category description", responseBody["data"].(map[string]interface{})["description"])
+	assert.Equal(t, category.ID, int(responseBody["data"].(map[string]interface{})["category_id"].(float64)))
+	assert.Equal(t, "new product name", responseBody["data"].(map[string]interface{})["name"])
+	assert.Equal(t, "new product description", responseBody["data"].(map[string]interface{})["description"])
 }
-func TestCreateCategoryFailed(t *testing.T) {
+
+func TestCreateProductFailed(t *testing.T) {
 	db := setupTestDB()
 	truncateProduct(db)
 	truncateCategory(db)
+	category := createCategory(db)
 	router := setupRouter(db)
 
-	url := fmt.Sprintf("%s:%d/%s/categories",
+	url := fmt.Sprintf("%s:%d/%s/products",
 		baseUrl, port, apiVersion)
 
-	requestBody := strings.NewReader(`{"name":"","description":""}`)
+	req := fmt.Sprintf(`{"name":"","description":"", "category_id":%d}`, category.ID)
+
+	requestBody := strings.NewReader(req)
 	request := httptest.NewRequest(http.MethodPost, url, requestBody)
 	request.Header.Add("Content-Type", "application/json")
 
@@ -85,17 +93,19 @@ func TestCreateCategoryFailed(t *testing.T) {
 	assert.Equal(t, 400, int(responseBody["code"].(float64)))
 }
 
-func TestUpdateCategorySuccess(t *testing.T) {
+func TestUpdateProductSuccess(t *testing.T) {
 	db := setupTestDB()
-	router := setupRouter(db)
-	truncateProduct(db)
 	truncateCategory(db)
 	category := createCategory(db)
+	product := createProduct(db, category.ID)
+	router := setupRouter(db)
 
-	url := fmt.Sprintf("%s:%d/%s/categories/%d",
-		baseUrl, port, apiVersion, category.ID)
+	url := fmt.Sprintf("%s:%d/%s/products/%d",
+		baseUrl, port, apiVersion, product.ID)
 
-	requestBody := strings.NewReader(`{"name":"updated category name","description":"updated category description"}`)
+	req := fmt.Sprintf(`{"name":"updated product name","description":"updated product description", "category_id":%d}`, category.ID)
+
+	requestBody := strings.NewReader(req)
 	request := httptest.NewRequest(http.MethodPut, url, requestBody)
 	request.Header.Add("Content-Type", "application/json")
 
@@ -112,19 +122,21 @@ func TestUpdateCategorySuccess(t *testing.T) {
 
 	assert.Equal(t, 200, int(responseBody["code"].(float64)))
 	assert.Equal(t, "OK", responseBody["status"])
-	assert.Equal(t, category.ID, int(responseBody["data"].(map[string]interface{})["id"].(float64)))
-	assert.Equal(t, "updated category name", responseBody["data"].(map[string]interface{})["name"])
-	assert.Equal(t, "updated category description", responseBody["data"].(map[string]interface{})["description"])
+	assert.Equal(t, product.ID, int(responseBody["data"].(map[string]interface{})["id"].(float64)))
+	assert.Equal(t, category.ID, int(responseBody["data"].(map[string]interface{})["category_id"].(float64)))
+	assert.Equal(t, "updated product name", responseBody["data"].(map[string]interface{})["name"])
+	assert.Equal(t, "updated product description", responseBody["data"].(map[string]interface{})["description"])
 }
-func TestUpdateCategoryFailed(t *testing.T) {
-	db := setupTestDB()
-	router := setupRouter(db)
-	truncateProduct(db)
-	truncateCategory(db)
-	category := createCategory(db)
 
-	url := fmt.Sprintf("%s:%d/%s/categories/%d",
-		baseUrl, port, apiVersion, category.ID)
+func TestUpdateProductFailed(t *testing.T) {
+	db := setupTestDB()
+	truncateProduct(db)
+	category := createCategory(db)
+	product := createProduct(db, category.ID)
+	router := setupRouter(db)
+
+	url := fmt.Sprintf("%s:%d/%s/products/%d",
+		baseUrl, port, apiVersion, product.ID)
 
 	requestBody := strings.NewReader(`{"name":"","description":""}`)
 	request := httptest.NewRequest(http.MethodPut, url, requestBody)
@@ -145,16 +157,15 @@ func TestUpdateCategoryFailed(t *testing.T) {
 	assert.Equal(t, "BAD REQUEST", responseBody["status"])
 }
 
-func TestGetCategorySuccess(t *testing.T) {
+func TestGetProductSuccess(t *testing.T) {
 	db := setupTestDB()
+	truncateProduct(db)
+	category := createCategory(db)
+	product := createProduct(db, category.ID)
 	router := setupRouter(db)
 
-	truncateProduct(db)
-	truncateCategory(db)
-	category := createCategory(db)
-
-	url := fmt.Sprintf("%s:%d/%s/categories/%d",
-		baseUrl, port, apiVersion, category.ID)
+	url := fmt.Sprintf("%s:%d/%s/products/%d",
+		baseUrl, port, apiVersion, product.ID)
 
 	request := httptest.NewRequest(http.MethodGet, url, nil)
 
@@ -171,18 +182,19 @@ func TestGetCategorySuccess(t *testing.T) {
 
 	assert.Equal(t, 200, int(responseBody["code"].(float64)))
 	assert.Equal(t, "OK", responseBody["status"])
-	assert.Equal(t, category.ID, int(responseBody["data"].(map[string]interface{})["id"].(float64)))
-	assert.Equal(t, category.Name, responseBody["data"].(map[string]interface{})["name"])
-	assert.Equal(t, category.Description, responseBody["data"].(map[string]interface{})["description"])
+	assert.Equal(t, product.ID, int(responseBody["data"].(map[string]interface{})["id"].(float64)))
+	assert.Equal(t, product.CategoryID, int(responseBody["data"].(map[string]interface{})["category_id"].(float64)))
+	assert.Equal(t, product.Name, responseBody["data"].(map[string]interface{})["name"])
+	assert.Equal(t, product.Description, responseBody["data"].(map[string]interface{})["description"])
 }
-func TestGetCategoryFailed(t *testing.T) {
+
+func TestGetProductFailed(t *testing.T) {
 	db := setupTestDB()
 	truncateProduct(db)
-	truncateCategory(db)
 
 	router := setupRouter(db)
 
-	url := fmt.Sprintf("%s:%d/%s/categories/%d",
+	url := fmt.Sprintf("%s:%d/%s/products/%d",
 		baseUrl, port, apiVersion, 404)
 
 	request := httptest.NewRequest(http.MethodGet, url, nil)
@@ -202,15 +214,15 @@ func TestGetCategoryFailed(t *testing.T) {
 	assert.Equal(t, "NOT FOUND", responseBody["status"])
 }
 
-func TestDeleteCategorySuccess(t *testing.T) {
+func TestDeleteProductSuccess(t *testing.T) {
 	db := setupTestDB()
-	router := setupRouter(db)
 	truncateProduct(db)
-	truncateCategory(db)
 	category := createCategory(db)
+	product := createProduct(db, category.ID)
+	router := setupRouter(db)
 
-	url := fmt.Sprintf("%s:%d/%s/categories/%d",
-		baseUrl, port, apiVersion, category.ID)
+	url := fmt.Sprintf("%s:%d/%s/products/%d",
+		baseUrl, port, apiVersion, product.ID)
 
 	request := httptest.NewRequest(http.MethodDelete, url, nil)
 
@@ -228,13 +240,13 @@ func TestDeleteCategorySuccess(t *testing.T) {
 	assert.Equal(t, 200, int(responseBody["code"].(float64)))
 	assert.Equal(t, "OK", responseBody["status"])
 }
-func TestDeleteCategoryFailed(t *testing.T) {
+
+func TestDeleteProductFailed(t *testing.T) {
 	db := setupTestDB()
 	truncateProduct(db)
-	truncateCategory(db)
 	router := setupRouter(db)
 
-	url := fmt.Sprintf("%s:%d/%s/categories/%d",
+	url := fmt.Sprintf("%s:%d/%s/products/%d",
 		baseUrl, port, apiVersion, 404)
 
 	request := httptest.NewRequest(http.MethodDelete, url, nil)
@@ -254,16 +266,15 @@ func TestDeleteCategoryFailed(t *testing.T) {
 	assert.Equal(t, "NOT FOUND", responseBody["status"])
 }
 
-func TestGetListCategorySuccess(t *testing.T) {
+func TestGetListProductsSuccess(t *testing.T) {
 	db := setupTestDB()
 	truncateProduct(db)
-	truncateCategory(db)
+	category := createCategory(db)
+	product1 := createProduct(db, category.ID)
+	product2 := createProduct(db, category.ID)
 	router := setupRouter(db)
 
-	category1 := createCategory(db)
-	category2 := createCategory(db)
-
-	url := fmt.Sprintf("%s:%d/%s/categories",
+	url := fmt.Sprintf("%s:%d/%s/products",
 		baseUrl, port, apiVersion)
 
 	request := httptest.NewRequest(http.MethodGet, url, nil)
@@ -282,16 +293,18 @@ func TestGetListCategorySuccess(t *testing.T) {
 	assert.Equal(t, 200, int(responseBody["code"].(float64)))
 	assert.Equal(t, "OK", responseBody["status"])
 
-	var categories = responseBody["data"].([]interface{})
+	var products = responseBody["data"].([]interface{})
 
-	categoryResponse1 := categories[0].(map[string]interface{})
-	categoryResponse2 := categories[1].(map[string]interface{})
+	productResponse1 := products[0].(map[string]interface{})
+	productResponse2 := products[1].(map[string]interface{})
 
-	assert.Equal(t, category1.ID, int(categoryResponse1["id"].(float64)))
-	assert.Equal(t, category1.Name, categoryResponse1["name"])
-	assert.Equal(t, category1.Description, categoryResponse1["description"])
+	assert.Equal(t, product1.ID, int(productResponse1["id"].(float64)))
+	assert.Equal(t, product1.CategoryID, int(productResponse1["category_id"].(float64)))
+	assert.Equal(t, product1.Name, productResponse1["name"])
+	assert.Equal(t, product1.Description, productResponse1["description"])
 
-	assert.Equal(t, category2.ID, int(categoryResponse2["id"].(float64)))
-	assert.Equal(t, category2.Name, categoryResponse2["name"])
-	assert.Equal(t, category2.Description, categoryResponse2["description"])
+	assert.Equal(t, product2.ID, int(productResponse2["id"].(float64)))
+	assert.Equal(t, product2.CategoryID, int(productResponse2["category_id"].(float64)))
+	assert.Equal(t, product2.Name, productResponse2["name"])
+	assert.Equal(t, product2.Description, productResponse2["description"])
 }
