@@ -136,3 +136,42 @@ func (repository *TransactionRepositoryImpl) DeleteProductInCart(ctx context.Con
 	_, err := tx.ExecContext(ctx, SQL, cartID)
 	helper.PanicIfError(err)
 }
+
+func (repository *TransactionRepositoryImpl) GetProductByCartID(ctx context.Context, tx *sql.Tx, cartID int) (domain.Transaction, error) {
+	SQL := `
+	SELECT 
+		id,
+		quantity,
+		price,
+		total_price,
+		user_id,
+		product_id,
+		owner_id,
+		is_in_cart
+	FROM transactions 
+	WHERE id = $1 AND is_in_cart = true AND deleted_at IS NULL`
+	rows, err := tx.QueryContext(ctx, SQL, cartID)
+	helper.PanicIfError(err)
+
+	defer rows.Close()
+
+	transaction := domain.Transaction{}
+	if rows.Next() {
+		err := rows.Scan(&transaction.ID, &transaction.Quantity, &transaction.Price, &transaction.TotalPrice, &transaction.UserID, &transaction.ProductID, &transaction.OwnerID, &transaction.IsInCart)
+		helper.PanicIfError(err)
+		return transaction, nil
+	} else {
+		return transaction, errors.New("transaction is not found")
+	}
+}
+
+func (repository *TransactionRepositoryImpl) SetCartFalse(ctx context.Context, tx *sql.Tx, cartID int) {
+	SQL := `UPDATE transactions SET is_in_cart=false where id=$1`
+
+	_, err := tx.ExecContext(
+		ctx,
+		SQL,
+		&cartID,
+	)
+	helper.PanicIfError(err)
+}

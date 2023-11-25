@@ -74,3 +74,19 @@ func (controller *TransactionControllerImpl) Delete(writer http.ResponseWriter, 
 
 	helper.WriteToResponseBody(writer, webResponse)
 }
+
+func (controller *TransactionControllerImpl) Checkout(writer http.ResponseWriter, request *http.Request, params httprouter.Params) {
+	cartID := params.ByName("cartId")
+	id, err := strconv.Atoi(cartID)
+	helper.PanicIfError(err)
+
+	transactionResponse := controller.TransactionService.Checkout(request.Context(), id)
+
+	webResponse := web.WebResponse{
+		Code:   200,
+		Status: "OK",
+		Data:   transactionResponse,
+	}
+
+	helper.WriteToResponseBody(writer, webResponse)
+}

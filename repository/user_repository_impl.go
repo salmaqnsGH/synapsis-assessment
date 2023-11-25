@@ -48,3 +48,25 @@ func (repository *UserRepositoryImpl) Update(ctx context.Context, tx *sql.Tx, us
 
 	return user
 }
+
+func (repository *UserRepositoryImpl) UpdateBalance(ctx context.Context, tx *sql.Tx, userID int, balance int) {
+	SQL := "UPDATE users SET balance=$1, updated_at=now() WHERE id = $2"
+
+	_, err := tx.ExecContext(ctx, SQL, balance, userID)
+	helper.PanicIfError(err)
+}
+
+func (repository *UserRepositoryImpl) FindByID(ctx context.Context, tx *sql.Tx, userID int) (domain.User, error) {
+	const SQL = `SELECT id, name, username, password, balance FROM users WHERE id = $1 AND deleted_at IS NULL`
+
+	user := domain.User{}
+	err := tx.QueryRowContext(ctx, SQL, userID).Scan(&user.ID, &user.Name, &user.Username, &user.Password, &user.Balance)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return domain.User{}, nil // user not found
+		}
+		return domain.User{}, err
+	}
+
+	return user, nil
+}

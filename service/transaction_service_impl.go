@@ -15,14 +15,16 @@ import (
 type TransactionServiceImpl struct {
 	TransactionRepository repository.TransactionRepository
 	ProductRepository     repository.ProductRepository
+	UserRepository        repository.UserRepository
 	DB                    *sql.DB
 	Validate              *validator.Validate
 }
 
-func NewTransactionService(transactionRepository repository.TransactionRepository, productRepository repository.ProductRepository, DB *sql.DB, validate *validator.Validate) TransactionService {
+func NewTransactionService(transactionRepository repository.TransactionRepository, productRepository repository.ProductRepository, userRepository repository.UserRepository, DB *sql.DB, validate *validator.Validate) TransactionService {
 	return &TransactionServiceImpl{
 		TransactionRepository: transactionRepository,
 		ProductRepository:     productRepository,
+		UserRepository:        userRepository,
 		DB:                    DB,
 		Validate:              validate,
 	}
@@ -123,4 +125,59 @@ func (service *TransactionServiceImpl) Delete(ctx context.Context, productID int
 	}
 
 	service.TransactionRepository.DeleteProductInCart(ctx, tx, cart.ID)
+}
+
+func (service *TransactionServiceImpl) Checkout(ctx context.Context, cartID int) web.CartCreateResponse {
+
+	tx, err := service.DB.Begin()
+	helper.PanicIfError(err)
+
+	defer helper.CommitOrRollback(tx)
+	// /checkout/:cart_id
+
+	// Transaction:
+	// get cart by ID
+	cart, _ := service.TransactionRepository.GetProductByCartID(ctx, tx, cartID)
+	// -is_in_cart = false
+	service.TransactionRepository.SetCartFalse(ctx, tx, cartID)
+	// -product.qty
+	product, err := service.ProductRepository.FindByID(ctx, tx, cart.ProductID)
+	if err != nil {
+		panic(exception.NewNotFoundError(err.Error()))
+	}
+
+	product.Quantity = product.Quantity - cart.Quantity
+	product = service.ProductRepository.Update(ctx, tx, product)
+
+	// -user_id.balance
+	user, _ := service.UserRepository.FindByID(ctx, tx, cart.UserID)
+	customerBalance := user.Balance - cart.TotalPrice
+	service.UserRepository.UpdateBalance(ctx, tx, cart.UserID, customerBalance)
+	// +owner_id.balance
+	owner, _ := service.UserRepository.FindByID(ctx, tx, cart.OwnerID)
+	ownerBalance := owner.Balance + cart.TotalPrice
+	service.UserRepository.UpdateBalance(ctx, tx, cart.UserID, ownerBalance)
+
+	transactionRequest := domain.Transaction{
+		ID:         cart.ID,
+		Quantity:   cart.Quantity,
+		UserID:     user.ID,
+		ProductID:  product.ID,
+		OwnerID:    product.OwnerID,
+		Price:      product.Price,
+		TotalPrice: cart.TotalPrice,
+	}
+
+	transaction := service.TransactionRepository.UpdateByID(ctx, tx, transactionRequest)
+
+	return web.CartCreateResponse{
+		ID:         transaction.ID,
+		Quantity:   transaction.Quantity,
+		Price:      transaction.Price,
+		TotalPrice: transaction.TotalPrice,
+		IsInCart:   transaction.IsInCart,
+		UserID:     transaction.UserID,
+		ProductID:  transaction.ProductID,
+		OwnerID:    transaction.OwnerID,
+	}
 }

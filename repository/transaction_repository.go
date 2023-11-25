@@ -12,4 +12,6 @@ type TransactionRepository interface {
 	UpdateByID(ctx context.Context, tx *sql.Tx, transaction domain.Transaction) domain.Transaction
 	FindAllProductInCart(ctx context.Context, tx *sql.Tx, userID int) []domain.Transaction
 	DeleteProductInCart(ctx context.Context, tx *sql.Tx, cartID int)
+	GetProductByCartID(ctx context.Context, tx *sql.Tx, cartID int) (domain.Transaction, error)
+	SetCartFalse(ctx context.Context, tx *sql.Tx, cartID int)
 }

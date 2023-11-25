@@ -42,7 +42,7 @@ func main() {
 	productController := controller.NewProductController(productService)
 
 	transactionRepository := repository.NewTransactionRepository()
-	transactionService := service.NewTransactionService(transactionRepository, productRepository, db, validate)
+	transactionService := service.NewTransactionService(transactionRepository, productRepository, userRepository, db, validate)
 	transactionController := controller.NewTransactionController(transactionService)
 
 	router := app.NewRouter(categoryController, userController, productController, transactionController)

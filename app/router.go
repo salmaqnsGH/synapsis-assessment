@@ -13,6 +13,7 @@ func NewRouter(categoryController controller.CategoryController, userController 
 	router.POST("/api/v1/cart/add/:productId", transactionController.AddToCart)
 	router.DELETE("/api/v1/cart/:productId", transactionController.Delete)
 	router.GET("/api/v1/cart/", transactionController.FindAllProductInCart)
+	router.GET("/api/v1/cart/checkout/:cartId", transactionController.Checkout)
 
 	router.GET("/api/v1/categories", categoryController.FindAll)
 	router.GET("/api/v1/categories/:categoryId", categoryController.FindByID)
