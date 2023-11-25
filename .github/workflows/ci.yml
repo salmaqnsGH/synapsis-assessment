@@ -18,7 +18,11 @@ jobs:
         env:
           DB_USER: root
           DB_PASSWORD: secret
-          DB_NAME: my_bank
+          DB_NAME: shopping
+          TEST_DB_HOST: localhost
+          TEST_DB_USER: root
+          TEST_DB_PASSWORD: secret
+          TEST_DB_NAME: shopping_test
         ports:
           - 5455:5432
         options: >-
