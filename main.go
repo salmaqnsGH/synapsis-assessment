@@ -37,7 +37,11 @@ func main() {
 	userService := service.NewUserService(userRepository, db, validate)
 	userController := controller.NewUserController(userService)
 
-	router := app.NewRouter(categoryController, userController)
+	productRepository := repository.NewProductRepository()
+	productService := service.NewProductService(productRepository, db, validate)
+	productController := controller.NewProductController(productService)
+
+	router := app.NewRouter(categoryController, userController, productController)
 
 	address := fmt.Sprintf("%s:%s", host, port)
 
