@@ -39,6 +39,7 @@ func (service *ProductServiceImpl) Create(ctx context.Context, req web.ProductCr
 		Name:        req.Name,
 		Description: req.Description,
 		CategoryID:  req.CategoryID,
+		OwnerID:     req.OwnerID,
 	}
 
 	product = service.ProductRepository.Save(ctx, tx, product)
@@ -48,6 +49,7 @@ func (service *ProductServiceImpl) Create(ctx context.Context, req web.ProductCr
 		Name:        product.Name,
 		Description: product.Description,
 		CategoryID:  product.CategoryID,
+		OwnerID:     product.OwnerID,
 	}
 }
 
@@ -76,6 +78,7 @@ func (service *ProductServiceImpl) Update(ctx context.Context, req web.ProductUp
 		Name:        product.Name,
 		Description: product.Description,
 		CategoryID:  product.CategoryID,
+		OwnerID:     product.OwnerID,
 	}
 }
 
@@ -109,6 +112,7 @@ func (service *ProductServiceImpl) FindByID(ctx context.Context, productID int) 
 		Name:        product.Name,
 		Description: product.Description,
 		CategoryID:  product.CategoryID,
+		OwnerID:     product.OwnerID,
 	}
 }
 
@@ -127,6 +131,7 @@ func (service *ProductServiceImpl) FindAll(ctx context.Context) []web.ProductRes
 			Name:        product.Name,
 			Description: product.Description,
 			CategoryID:  product.CategoryID,
+			OwnerID:     product.OwnerID,
 		}
 		productResponses = append(productResponses, productResponse)
 	}

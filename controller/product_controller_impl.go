@@ -24,6 +24,10 @@ func (controller *ProductControllerImpl) Create(writer http.ResponseWriter, requ
 	productCreateRequest := web.ProductCreateRequest{}
 	helper.ReadFromRequestBody(request, &productCreateRequest)
 
+	userID := helper.GetUserIDFromToken(writer, request)
+
+	productCreateRequest.OwnerID = int(userID.(float64))
+
 	productResponse := controller.ProductService.Create(request.Context(), productCreateRequest)
 
 	webResponse := web.WebResponse{

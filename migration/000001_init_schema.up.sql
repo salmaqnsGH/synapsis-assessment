@@ -18,7 +18,11 @@ CREATE TABLE products (
 	id SERIAL PRIMARY KEY,
 	name VARCHAR(255),
     description VARCHAR(255),
-	category_id INT REFERENCES categories(id)
+	category_id INT REFERENCES categories(id),
+	owner_id INT REFERENCES users(id),
+    createdAt TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updatedAt TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deletedAt TIMESTAMPTZ
 );
 
 

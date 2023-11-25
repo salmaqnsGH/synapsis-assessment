@@ -2,7 +2,10 @@ package helper
 
 import (
 	"errors"
+	"net/http"
 	"os"
+	"salmaqnsGH/sysnapsis-assessment/model/web"
+	"strings"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -44,4 +47,48 @@ func ValidateToken(encodedToken string) (*jwt.Token, error) {
 	}
 
 	return token, nil
+}
+
+func GetUserIDFromToken(writer http.ResponseWriter, req *http.Request) interface{} {
+	authHeader := req.Header.Get("Authorization")
+
+	if !strings.Contains(authHeader, "Bearer") {
+		webResponse := web.WebResponse{
+			Code:   http.StatusUnauthorized,
+			Status: "UNAUTHORIZED",
+		}
+
+		WriteToResponseBody(writer, webResponse)
+		return webResponse
+	}
+
+	tokenString := ""
+	arrayToken := strings.Split(authHeader, " ")
+	if len(arrayToken) == 2 {
+		tokenString = arrayToken[1]
+	}
+
+	token, err := ValidateToken(tokenString)
+	if err != nil {
+		webResponse := web.WebResponse{
+			Code:   http.StatusUnauthorized,
+			Status: "UNAUTHORIZED",
+		}
+
+		WriteToResponseBody(writer, webResponse)
+		return webResponse
+	}
+
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok || !token.Valid {
+		webResponse := web.WebResponse{
+			Code:   http.StatusUnauthorized,
+			Status: "UNAUTHORIZED",
+		}
+
+		WriteToResponseBody(writer, webResponse)
+		return webResponse
+	}
+
+	return claims["user_id"]
 }
