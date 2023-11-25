@@ -7,8 +7,10 @@ import (
 	"github.com/julienschmidt/httprouter"
 )
 
-func NewRouter(categoryController controller.CategoryController, userController controller.UserController, productController controller.ProductController) *httprouter.Router {
+func NewRouter(categoryController controller.CategoryController, userController controller.UserController, productController controller.ProductController, transactionController controller.TransactionController) *httprouter.Router {
 	router := httprouter.New()
+
+	router.POST("/api/v1/cart/add/:productId", transactionController.AddToCart)
 
 	router.GET("/api/v1/categories", categoryController.FindAll)
 	router.GET("/api/v1/categories/:categoryId", categoryController.FindByID)

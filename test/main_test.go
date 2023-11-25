@@ -82,7 +82,11 @@ func setupRouter(db *sql.DB) http.Handler {
 	productService := service.NewProductService(productRepository, db, validate)
 	productController := controller.NewProductController(productService)
 
-	router := app.NewRouter(categoryController, userController, productController)
+	transactionRepository := repository.NewTransactionRepository()
+	transactionService := service.NewTransactionService(transactionRepository, productRepository, db, validate)
+	transactionController := controller.NewTransactionController(transactionService)
+
+	router := app.NewRouter(categoryController, userController, productController, transactionController)
 
 	return router
 }
