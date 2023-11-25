@@ -8,7 +8,10 @@ CREATE TABLE users (
 CREATE TABLE categories (
     id SERIAL PRIMARY KEY,
     name VARCHAR(255),
-    description VARCHAR(255)
+    description VARCHAR(255),
+    createdAt TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updatedAt TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deletedAt TIMESTAMPTZ
 );
 
 CREATE TABLE products (
